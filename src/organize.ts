@@ -116,8 +116,6 @@ export function miniorganize<TValue>(
     defaultGroup!.values.push({ value, sortKey });
   });
 
-  console.log('SORT');
-
   if (options.sort) {
     groups.forEach((group) => {
       if (options.sort === "DESC") {
