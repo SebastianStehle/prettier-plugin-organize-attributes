@@ -10,6 +10,15 @@ describe("miniorganize", () => {
     expect(result).toStrictEqual(expected);
   });
 
+  it("should miniorganize and ignore some chars", () => {
+    const input = ["c", "[a1]", "b1", "(a2)", "b2"];
+    const expected = ["[a1]", "(a2)", "b1", "b2", "c"];
+
+    const result = miniorganize(input, { groups: ["^a", "^b"], ignoreChars: '[(' }).flat;
+
+    expect(result).toStrictEqual(expected);
+  });
+
   it("should manually place not matches", () => {
     const input = ["a", "b", "c", "other"];
     const expected = ["other", "a", "b", "c"];

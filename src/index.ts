@@ -33,6 +33,11 @@ export const options: {
     description: "A flag to ignore casing in regexps or not.",
     default: true,
   },
+  attributeIgnoreChars: {
+    type: "string",
+    category: "Global",
+    description: "Ignores these starting or ending chars when comparing strings.",
+  },
 };
 
 interface HTMLNode {
@@ -66,6 +71,7 @@ function transformRootNode(
     options.attributeSort === "NONE" ? false : options.attributeSort;
   const groups = [...options.attributeGroups];
   const ignoreCase = options.attributeIgnoreCase;
+  const ignoreChars = options.attributeIgnoreChars;
 
   if (groups.length === 0) {
     switch (options.parser.toString().toLowerCase()) {
@@ -81,7 +87,7 @@ function transformRootNode(
     }
   }
 
-  transformNode(node, groups, sort, ignoreCase);
+  transformNode(node, groups, sort, ignoreCase, ignoreChars);
   return node;
 }
 
@@ -89,12 +95,14 @@ function transformNode(
   node: HTMLNode,
   groups: string[],
   sort: OrganizeOptionsSort,
-  ignoreCase = true
+  ignoreCase = true,
+  ignoreChars?: string,
 ): void {
   if (node.attrs) {
     node.attrs = miniorganize(node.attrs, {
       presets: PRESETS,
       ignoreCase,
+      ignoreChars,
       groups,
       sort,
       map: ({ name }) => name,
@@ -102,7 +110,7 @@ function transformNode(
   }
 
   node.children?.forEach((child) =>
-    transformNode(child, groups, sort, ignoreCase)
+    transformNode(child, groups, sort, ignoreCase, ignoreChars)
   );
 }
 
@@ -110,4 +118,5 @@ export type PrettierPluginOrganizeAttributesParserOptions = {
   attributeGroups: string[];
   attributeSort: "ASC" | "DESC" | "NONE";
   attributeIgnoreCase: boolean;
+  attributeIgnoreChars?: string;
 };

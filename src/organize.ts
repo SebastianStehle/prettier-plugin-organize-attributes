@@ -19,6 +19,7 @@ export interface BaseOrganizeOptions<TPresets extends Presets> {
   groups: GroupKey<TPresets>[];
   sort?: OrganizeOptionsSort;
   ignoreCase?: boolean;
+  ignoreChars?: string;
 }
 
 export type OrganizeOptionsSort = "ASC" | "DESC" | boolean;
@@ -48,7 +49,7 @@ export function miniorganize<TValue>(
   ): {
     regexp?: RegExp;
     unknown: boolean;
-    values: TValue[];
+    values: { sortKey: string; value: TValue }[];
     query: GroupQuery;
   }[] => {
     if (query === DEFAULT_GROUP) {
@@ -80,42 +81,56 @@ export function miniorganize<TValue>(
     groups.push(defaultGroup);
   }
 
+  let trimSet = 
+    options.ignoreChars ?
+    new Set(options.ignoreChars.split(''))
+    : null
+
   const getString = (value: TValue): string => {
+    let result: string;
     if ("map" in options) {
-      return options.map(value);
+      result = options.map(value);
     } else if (typeof value === "string") {
-      return value;
+      result = value;
     } else {
       throw Error("Neither a map function nor string values were passed!");
     }
+
+    if (trimSet) {
+      result = trim(result, trimSet);
+    }
+
+    return result;
   };
 
   values.forEach((value) => {
-    const mapped = getString(value);
+    const sortKey = getString(value);
 
     for (let group of groups) {
-      if (group.regexp && mapped.match(group.regexp)) {
-        group.values.push(value);
+      if (group.regexp && sortKey.match(group.regexp)) {
+        group.values.push({ value, sortKey });
         return;
       }
     }
 
-    defaultGroup!.values.push(value);
+    defaultGroup!.values.push({ value, sortKey });
   });
+
+  console.log('SORT');
 
   if (options.sort) {
     groups.forEach((group) => {
-      group.values.sort((a, b) => getString(a).localeCompare(getString(b)));
-
       if (options.sort === "DESC") {
-        group.values.reverse();
+        group.values.sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+      } else {
+        group.values.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
       }
     });
   }
 
   return {
-    flat: groups.flatMap((group) => group.values),
-    groups: groups.map(({ query, values }) => ({ query, values })),
+    flat: groups.flatMap((group) => group.values.map(v => v.value)),
+    groups: groups.map(({ query, values }) => ({ query, values: values.map(v => v.value) })),
   };
 }
 
@@ -135,4 +150,20 @@ function getDefaultGroup() {
     values: [],
     query: DEFAULT_GROUP,
   };
+}
+
+const trim = (str: string, chars: Set<string>) => {
+  let start = 0,  end = str.length;
+
+  while (start < end && chars.has(str[start])) {
+    ++start;
+  }
+
+  while (end > start && chars.has(str[end - 1])) {
+    --end;
+  }
+
+  return (start > 0 || end < str.length) 
+  ? str.substring(start, end) 
+  : str;
 }

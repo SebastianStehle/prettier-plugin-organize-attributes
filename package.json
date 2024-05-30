@@ -27,21 +27,21 @@
   "main": "lib/index",
   "types": "lib/index",
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc --pretty",
     "watch": "npm run build -- --watch",
-    "watch:test": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
+    "watch:test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch -t",
     "release:plugin": "npm run test && npm run build && npm publish",
     "release:plugin:local": "npm run test && npm run build && npm publish --registry=http://localhost:4873/"
   },
   "peerDependencies": {
     "prettier": "^3.0.0"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/jest": "29.1.1",
     "@types/node": "^14.14.2",
     "codecov": "^3.8.0",
+    "cross-env": "^7.0.3",
     "jest": "29.1.1",
     "prettier": "^3.0.0",
     "ts-jest": "29.1.1",
